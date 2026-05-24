@@ -175,7 +175,7 @@ async def fetch_newsdata(session, country, topic):
 
 async def translate_summary(summary_text, target_lang):
     try:
-        if target_lang == "en":
+        if target_lang in ("en", "en-GB", "en-US"):
             return summary_text
         def do_translate():
             from deep_translator import MyMemoryTranslator
