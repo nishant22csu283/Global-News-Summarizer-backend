@@ -5,7 +5,7 @@ import requests
 import aiohttp
 import asyncio
 
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 
 from collections import defaultdict
 
@@ -32,8 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-translator = Translator()
 
 nltk.download("punkt", quiet=True)
 
@@ -434,21 +432,16 @@ async def get_summary(request: Request):
     # -----------------------------------
 
     async def translate_summary(summary_text, target_lang):
-        try:
-            if target_lang == "en":
-                return summary_text
-            def do_translate():
-                local_translator = Translator()
-                result = local_translator.translate(
-                    summary_text,
-                    dest=target_lang
-                )
-                return result.text
-            result = await asyncio.to_thread(do_translate)
-            return result
-        except Exception as e:
-            print("Translation Error:", e)
+    try:
+        if target_lang == "en":
             return summary_text
+        def do_translate():
+            return GoogleTranslator(source='auto', target=target_lang).translate(summary_text)
+        result = await asyncio.to_thread(do_translate)
+        return result
+    except Exception as e:
+        print("Translation Error:", e)
+        return summary_text
 
     async def process_article(article):
         try:
