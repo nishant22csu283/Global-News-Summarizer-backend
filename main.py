@@ -4,8 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import aiohttp
 import asyncio
 
-from deep_translator import GoogleTranslator
-
 from collections import defaultdict
 
 import nltk
@@ -175,6 +173,23 @@ async def fetch_newsdata(session, country, topic):
         print("NewsData.io Error:", e)
     return articles
 
+async def translate_summary(summary_text, target_lang):
+    try:
+        if target_lang == "en":
+            return summary_text
+        def do_translate():
+            from deep_translator import MyMemoryTranslator
+            translated = MyMemoryTranslator(
+                source='en-GB',
+                target=target_lang
+            ).translate(summary_text[:500])
+            return translated
+        result = await asyncio.to_thread(do_translate)
+        return result if result else summary_text
+    except Exception as e:
+        print("Translation Error:", e)
+        return summary_text
+
 @app.get("/summaries")
 async def get_summary(request: Request):
     country_name = request.query_params.get("country", "India")
@@ -209,17 +224,6 @@ async def get_summary(request: Request):
         if normalized not in seen_titles:
             seen_titles.add(normalized)
             unique_articles.append(article)
-
-    async def translate_summary(summary_text, target_lang):
-        try:
-            if target_lang == "en":
-                return summary_text
-            def do_translate():
-                return GoogleTranslator(source='auto', target=target_lang).translate(summary_text)
-            return await asyncio.to_thread(do_translate)
-        except Exception as e:
-            print("Translation Error:", e)
-            return summary_text
 
     async def process_article(article):
         try:
