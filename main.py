@@ -177,13 +177,18 @@ async def translate_summary(summary_text, target_lang):
     try:
         if target_lang in ("en", "en-GB", "en-US"):
             return summary_text
+        
+        # Extract just the language code (hi-IN → hi)
+        lang_code = target_lang.split("-")[0]
+        
         def do_translate():
             from deep_translator import MyMemoryTranslator
             translated = MyMemoryTranslator(
-                source='en-GB',
-                target=target_lang
+                source='en',
+                target=lang_code
             ).translate(summary_text[:500])
             return translated
+        
         result = await asyncio.to_thread(do_translate)
         return result if result else summary_text
     except Exception as e:
